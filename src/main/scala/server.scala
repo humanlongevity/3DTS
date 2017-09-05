@@ -1,5 +1,7 @@
 import akka.actor._
 import akka.stream._
+import akka.stream.scaladsl._
+import akka.util._
 import akka.http.scaladsl._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
@@ -13,6 +15,7 @@ import scala.concurrent.duration._
 import java.io.File
 import SharedTypes._
 import com.bluelabs.s3stream._
+import tasks.util.TempFile
 
 object Server {
 
@@ -46,26 +49,35 @@ object Server {
     import system.dispatcher
     val log = akka.event.Logging(system.eventStream, "http-server")
     log.info("Fetching index files..")
+    val linkFolder = TempFile.createTempFile("links")
+    linkFolder.delete
+    linkFolder.mkdirs
     Future
       .sequence((scoresIndex.files ++ cppdbIndex.files).map { sf =>
         sf.file.map { file =>
           val filelinkpath =
-            new java.io.File(file.getParentFile, sf.name)
-          if (!filelinkpath.canRead){
-              java.nio.file.Files.createSymbolicLink(filelinkpath.toPath,
+            new java.io.File(linkFolder, sf.name)
+
+          java.nio.file.Files.createSymbolicLink(filelinkpath.toPath,
                                                  file.toPath)
-          }
+
           log.info(
             "File downloaded: " + sf.name + " " + filelinkpath.getAbsolutePath)
           filelinkpath
         }
       })
       .flatMap { files =>
-        log.info("Index files downloaded. ")
+        log.info(s"Index files downloaded. $files")
         implicit val logging = log
         val indexFolder = files.head.getParentFile
         httpFromFolder(indexFolder, port)
       }
+  }
+
+  def getData(pdb: String): Source[ByteString, _] = {
+    val folder = tasks.util.config.global.storageURI.getPath
+    val file = new File(folder + "/pdbassembly/" + pdb + ".assembly.pdb")
+    akka.stream.scaladsl.FileIO.fromFile(file)
   }
 
   def httpFromFolder(indexFolder: File, port: Int)(
@@ -117,6 +129,18 @@ object Server {
         path(RemainingPath) { segment =>
           logRequest("other", Logging.InfoLevel) {
             Route.seal(getFromResource("public/" + segment))
+          }
+        } ~
+        path("pdb" / Segment) { segment =>
+          logRequest("pdb", Logging.InfoLevel) {
+            complete {
+              HttpResponse(
+                entity = HttpEntity.CloseDelimited(
+                  ContentTypes.`text/plain(UTF-8)`,
+                  getData(segment)
+                )
+              )
+            }
           }
         }
 
