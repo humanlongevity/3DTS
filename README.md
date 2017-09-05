@@ -27,6 +27,10 @@ The most relevant outputs will be the 3DTS scores and 3DTS feature definitions (
 3DTS scores: saturation/data/depletion3-7/full.gencode.v26lift37.annotation.gtf.gz.genome.json.gz.variationdata.json.gz.5.0.-52800447..json.gz.gencode.v26lift37.annotation.gtf.gz.genome.json.gz.-1067519786.json.gz
 3DTS feature defintions: saturation/data/structuralcontextfromfeatures/5.0.-52800447..json.gz 
 
+Web-server
+----------
+A server on port 8080 is launched after completion of the script, allowing users to query and visualize specific structures of interest. The color scheme ranges from red (intolerant) to white to blue (tolerant). Currently only proteinogenic atoms are shown.
+
 Advanced Usage and Development
 ------------------------------
 
