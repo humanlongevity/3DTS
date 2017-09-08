@@ -17,7 +17,7 @@ Quick Start Using AWS EC2
 
 Output
 ------
-After the script finishes (~1 day), 3DTS scores will have been produced using:
+After the script finishes (~10 hours), 3DTS scores will have been produced using:
 1. Genomic annotations from GenCode.v26lift37
 2. Genomic variation using gnomAD exomes and genomes data
 3. Protein structure information from the PDB
@@ -26,6 +26,12 @@ After the script finishes (~1 day), 3DTS scores will have been produced using:
 The most relevant outputs will be the 3DTS scores and 3DTS feature definitions (filenames may vary slightly):
 3DTS scores: saturation/data/depletion3-7/full.gencode.v26lift37.annotation.gtf.gz.genome.json.gz.variationdata.json.gz.5.0.-52800447..json.gz.gencode.v26lift37.annotation.gtf.gz.genome.json.gz.-1067519786.json.gz
 3DTS feature defintions: saturation/data/structuralcontextfromfeatures/5.0.-52800447..json.gz 
+
+Single-protein queries
+----------------------
+Currently, the code is optimized for producing structural proteome-wide scores. Individual proteins can then be queried through the output files or via the Web-server (see Web-server section below).
+
+Additionally, a shell script has been added to this repo to allow for individual queries using a UniprotKB ID with known X-ray structures (single_protein_query.sh). The tested query takes ~1 hour.
 
 Web-server
 ----------
