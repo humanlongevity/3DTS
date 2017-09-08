@@ -5,7 +5,7 @@ Sequence variation data of the human proteome can be used to analyze 3-dimension
 missense variation data to 3D structures, uses an underlying genetic model to 
 estimate expectation, and produces 3D Tolerance Scores (3DTS) for genetic loci in
 3D protein space. Details of the model are available through this code and are 
-described in detail in the manuscript listed below (see Citation). 
+described in detail in the manuscript listed below (see **Citation**). 
 
 Quick Start Using AWS EC2
 -------------------------
@@ -18,24 +18,28 @@ Quick Start Using AWS EC2
 Output
 ------
 After the script finishes (~10 hours), 3DTS scores will have been produced using:
+
 1. Genomic annotations from GenCode.v26lift37
 2. Genomic variation using gnomAD exomes and genomes data
 3. Protein structure information from the PDB
 4. Feature information from the current release of UniprotKB
 
 The most relevant outputs will be the 3DTS scores and 3DTS feature definitions (filenames may vary slightly):
+
 3DTS scores: 3DTS/data/depletion3-7/full.gencode.v26lift37.annotation.gtf.gz.genome.json.gz.variationdata.json.gz.5.0.-52800447..json.gz.gencode.v26lift37.annotation.gtf.gz.genome.json.gz.-1067519786.json.gz
-3DTS feature defintions: 3DTS/data/structuralcontextfromfeatures/5.0.-52800447..json.gz 
+
+3DTS feature defintions: 3DTS/data/structuralcontextfromfeatures/5.0.-52800447..json.gz
+
+For interactive queries, a server on port 8080 is launched after completion of the script, allowing users to query and visualize specific structures of interest. The color scheme ranges from red (intolerant) to white to blue (tolerant). Structures are displayed only for PDB-based queries; for any other query type, 3DTS information is shown in a table below. Currently only proteinogenic atoms are displayed.
 
 Single-protein queries
 ----------------------
-Currently, the code is optimized for producing structural proteome-wide scores. Individual proteins can then be queried through the output files or via the Web-server (see Web-server section below).
+The code has been optimized for producing structural proteome-wide scores. Individual proteins can then be queried through the output files or via the Web-server on port 8080 (see **Output** section above).
 
-Additionally, a shell script has been added to this repo to allow for individual queries using a UniprotKB ID with known X-ray structures (single_protein_query.sh). The tested query takes ~1 hour.
-
-Web-server
-----------
-A server on port 8080 is launched after completion of the script, allowing users to query and visualize specific structures of interest. The color scheme ranges from red (intolerant) to white to blue (tolerant). Currently only proteinogenic atoms are shown.
+A shell script has been added to this repo to allow for individual queries using a UniprotKB ID with known X-ray structures by editing the variable uniprotofinterest (see single_protein_query.sh). The tested query takes ~1 hour.
+~~~
+./single_protein_query.sh > log
+~~~
 
 Advanced Usage and Development
 ------------------------------
