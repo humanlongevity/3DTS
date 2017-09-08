@@ -4,14 +4,85 @@
 # run from within 3DTS folder
 uniprotofinterest="Q9Y478" # edit uniprot ID here - will work if pdbs are already linked in uniprot text file
 
-### Do not modify below
+
+
+## copied from install.then.run.sh - can be removed if data and requisite files installed already
+echo "needs yum"
+curl https://bintray.com/sbt/rpm/rpm | sudo tee /etc/yum.repos.d/bintray-sbt-rpm.repo
+sudo yum -y install sbt git java-1.8.0
+echo -e "2" | sudo /usr/sbin/alternatives --config java # configure to run on newer java-1.8.0 install
+
+#git clone git@github.com:humanlongevity/3DTS.git
+git clone https://github.com/humanlongevity/3DTS.git
+cd 3DTS
+dep=$(ls dependencies/)
+for i in $dep; do cd dependencies/$i && sbt -batch publishLocal && cd ../../ ; done
+mkdir lib
+wget -O lib/jdistlib.jar https://downloads.sourceforge.net/project/jdistlib/jdistlib-0.4.5-bin.jar?r=&ts=1502307860&use_mirror=netcologne
+
+cd dependencies
+git clone https://github.com/biasmv/pv
+cp pv/bio-pv.min.js ../src/main/resources/public/
+cd ..
+
+sbt -batch stage
+
+mkdir input
+mkdir data
+
+cat << EOF > input/conf
+akka.http.client.parsing.max-content-length = infinite
+akka.http.host-connection-pool.client.idle-timeout = infinite
+tasks.fileservice.storageURI = ./data/
+hosts.RAM=120000
+hosts.numCPU=16
+
+uniprotKb = input/uniprot.gz
+gencodeGTF = input/gencode.v26lift37.annotation.gtf.gz
+gencodeTranscripts = input/gencode.v26lift37.pc_transcripts.fa.gz
+gencodeMetadataXrefUniprot = input/gencode.v26lift37.metadata.SwissProt.gz
+
+# Server issues with storage.googleapis.com
+#gnomadGenome = "https://storage.googleapis.com/gnomad-public/release-170228/vcf/genomes/gnomad.genomes.r2.0.1.sites.coding.autosomes.vcf.gz"
+gnomadGenome = "https://data.broadinstitute.org/gnomAD/release-170228/genomes/vcf/gnomad.genomes.r2.0.1.sites.coding.autosomes.vcf.gz"
+#gnomadExome = "https://storage.googleapis.com/gnomad-public/release-170228/vcf/exomes/gnomad.exomes.r2.0.1.sites.vcf.gz"
+gnomadExome = "https://data.broadinstitute.org/gnomAD/release-170228/exomes/vcf/gnomad.exomes.r2.0.1.sites.vcf.gz"
+
+gnomadExomeCoverage = input/exome.coverage.concat.txt
+gnomadGenomeCoverage = input/genome.coverage.concat.txt
+EOF
+
+wget -O input/uniprot.gz  'http://www.uniprot.org/uniprot/?sort=&desc=&compress=yes&query=proteome:UP000005640%20reviewed:yes&fil=&force=yes&format=txt'
+
+# The following three gencode files may need to be downloaded manually and transferred to the instance
+# If they are downloaded manually, put them in the same directory as the install.then.run.sh
+wget -O input/gencode.v26lift37.annotation.gtf.gz ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_26/GRCh37_mapping/gencode.v26lift37.annotation.gtf.gz
+wget -O input/gencode.v26lift37.pc_transcripts.fa.gz ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_26/GRCh37_mapping/gencode.v26lift37.pc_transcripts.fa.gz
+wget -O input/gencode.v26lift37.metadata.SwissProt.gz ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_26/GRCh37_mapping/gencode.v26lift37.metadata.SwissProt.gz
+mv ../gencode.v26lift37.annotation.gtf.gz input/gencode.v26lift37.annotation.gtf.gz
+mv ../gencode.v26lift37.pc_transcripts.fa.gz input/gencode.v26lift37.pc_transcripts.fa.gz
+mv ../gencode.v26lift37.metadata.SwissProt.gz input/gencode.v26lift37.metadata.SwissProt.gz
+
+
+wget -O input/genome.coverage.all.tar https://data.broadinstitute.org/gnomAD/release-170228/genomes/coverage/genome.coverage.all.tar
+wget -O input/exome.coverage.all.tar  https://data.broadinstitute.org/gnomAD/release-170228/exomes/coverage/exome.coverage.all.tar
+
+mkdir tmp
+
+for i in $(tar tf input/genome.coverage.all.tar | grep -v tbi ) ; do tar xOf input/genome.coverage.all.tar $i | gunzip -c | grep -v "#" >> input/genome.coverage.concat.txt; done
+for i in $(tar tf input/exome.coverage.all.tar | grep -v tbi ) ; do tar xOf input/exome.coverage.all.tar $i | gunzip -c | grep -v "#" >> input/exome.coverage.concat.txt; done
+## above copied from install.then.run.sh - can be removed if data and requisite files installed already
+
+
+## Code for uniprot of interest - Do not modify below
 wget -O - "http://www.uniprot.org/uniprot/$uniprotofinterest.txt" | gzip -c > input/uniprot.gz # get single protein uniprot
 zgrep $uniprotofinterest input/gencode.v26lift37.metadata.SwissProt.gz > input/gencode.v26lift37.metadata.SwissProt_query.gz # capture relevant data for joins
 mv input/gencode.v26lift37.metadata.SwissProt_query.gz input/gencode.v26lift37.metadata.SwissProt.gz
 zgrep $uniprotofinterest input/gencode.v26lift37.metadata.SwissProt.gz | cut -f 1 | zgrep -f - input/gencode.v26lift37.annotation.gtf.gz | gzip -c > input/gencode.v26lift37.annotation.gtf_query.gz # capture relevant data for joins
 mv input/gencode.v26lift37.annotation.gtf_query.gz input/gencode.v26lift37.annotation.gtf.gz
-### Do not modify above
+## Code for uniprot of interest - Do not modify above
 
 
-# Runs 3DTS
+
+# Runs 3DTS pipeline
 target/universal/stage/bin/saturation -Dconfig.file=input/conf -J-Xmx115G -Djava.io.tmpdir=tmp/ -Dfile.encoding=UTF-8
