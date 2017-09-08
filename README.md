@@ -24,8 +24,8 @@ After the script finishes (~10 hours), 3DTS scores will have been produced using
 4. Feature information from the current release of UniprotKB
 
 The most relevant outputs will be the 3DTS scores and 3DTS feature definitions (filenames may vary slightly):
-3DTS scores: saturation/data/depletion3-7/full.gencode.v26lift37.annotation.gtf.gz.genome.json.gz.variationdata.json.gz.5.0.-52800447..json.gz.gencode.v26lift37.annotation.gtf.gz.genome.json.gz.-1067519786.json.gz
-3DTS feature defintions: saturation/data/structuralcontextfromfeatures/5.0.-52800447..json.gz 
+3DTS scores: 3DTS/data/depletion3-7/full.gencode.v26lift37.annotation.gtf.gz.genome.json.gz.variationdata.json.gz.5.0.-52800447..json.gz.gencode.v26lift37.annotation.gtf.gz.genome.json.gz.-1067519786.json.gz
+3DTS feature defintions: 3DTS/data/structuralcontextfromfeatures/5.0.-52800447..json.gz 
 
 Single-protein queries
 ----------------------
